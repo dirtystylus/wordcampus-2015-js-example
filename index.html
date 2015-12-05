@@ -1,0 +1,94 @@
+<html>
+  <head>
+    <style type="text/css">
+    
+    </style>
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+    <link href='https://fonts.googleapis.com/css?family=Lato:400,700,900,400italic' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+    <main role="main">
+    <header class="banner-wrapper">
+      <div class="banner">
+        <h1>WordCampUS 2015:<br>Decoupled Development with WP API (V2)</h1>
+        <h2>Custom Post Type + LeafletJS</h2>
+        <section class="list-map-toggle">
+          <h1>List/Map Toggle</h1>
+          <ul class="list-map-toggle-list">
+            <li class="list-map-toggle-item"><a href="#" class="list-show">Show List</a> / </li>
+            <li class="list-map-toggle-item"><a href="#" class="map-show">Show Map</a></li>
+          </ul>
+        </section>
+      </div>
+    </header>
+    <section class="display-wrapper">
+      <section class="listing">
+        <h1>Artwork List</h1>
+        <ul class="post-list">
+        </ul>
+      </section>
+      <section class="map-wrapper">
+        <h1>Map</h1>
+        <div id="map"></div>
+      </section>
+    </section>
+    </main>
+  </body>
+  <script src="./js/lib/jquery-2.1.4.min.js"></script>
+  <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+  <script>
+  var posts;
+  $(document).ready(function () {
+    $('.list-show').click(function () {
+      $('.listing').fadeIn();
+      $('.map-wrapper').fadeOut();
+      return false;
+    });
+    $('.map-show').click(function () {
+      $('.map-wrapper').fadeIn();
+      $('.listing').fadeOut();
+      return false;
+    });
+    
+    $.ajax( {
+      url: '[YOUR ARTWORK ENDPOINT GOES HERE]',
+      success: function ( data ) {
+        posts = data;
+        
+        for (var i = 0; i < posts.length; i++) {
+          var post = posts[i];
+          
+          var postTeaser = '<li><section class="artwork-teaser"><h1>' + 
+            post.title.rendered + '</h1><h2>' + post.acf.artist +
+           '</h2><div class="description-wrapper"><div class="artwork-image"><img src="' +
+           post.better_featured_image.media_details.sizes.medium.source_url +
+           '" /></div><div class="artwork-description">' +
+           post.acf.description + '</div></section></li>';
+          
+          $('.post-list').append(postTeaser);
+          
+          var lat = post.acf.latitude;
+          var long = post.acf.longitude;
+          var marker = L.marker([lat, long]).addTo(map);
+          marker.bindPopup('<p><strong>' + post.title.rendered + 
+            '</strong></p><p>' + post.acf.artist + '</p>');
+        }
+      },
+      cache: false
+    } );
+    
+    // map
+    var map = L.map('map').setView([39.96634264897658, -75.18358930041654], 16);
+    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+        maxZoom: 18,
+        id: '[YOUR MAPBOX APP ID GOES HERE]',
+        accessToken: '[YOUR MAPBOX ACCESS TOKEN GOES HERE]'
+    }).addTo(map);
+    
+    $('.listing').hide();
+    $('.map-wrapper').hide();
+  });
+  </script>
+</html>
